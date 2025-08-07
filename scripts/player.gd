@@ -4,34 +4,40 @@ extends CharacterBody2D
 const SPEED = 130.0
 const JUMP_VELOCITY = -300.0
 
+var is_alive = true
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 func _physics_process(delta: float) -> void:
-	# Add the gravity.
-	if not is_on_floor():
-		velocity += get_gravity() * delta
-
-	# Handle jump.
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-
 	# Get the input direction (-1, 0, 1)
 	var direction := Input.get_axis("move_left", "move_right")
 	
-	# Flip the sprites
-	if direction > 0:
-		animated_sprite.flip_h = false
-	elif direction < 0:
-		animated_sprite.flip_h = true
-	
-	# Play animations
-	if is_on_floor():
-		if direction == 0:
-			animated_sprite.play("idle")
-		else:
-			animated_sprite.play("run")
+	# Check is player is dead
+	if not is_alive:
+		direction = 0
 	else:
-		animated_sprite.play("jump")
+		# Handle jump.
+		if Input.is_action_just_pressed("jump") and is_on_floor():
+			velocity.y = JUMP_VELOCITY
+		
+		# Play animations
+		if is_on_floor():
+			if direction == 0:
+				animated_sprite.play("idle")
+			else:
+				animated_sprite.play("run")
+		else:
+			animated_sprite.play("jump")
+		
+		# Flip the sprites
+		if direction > 0:
+			animated_sprite.flip_h = false
+		elif direction < 0:
+			animated_sprite.flip_h = true
+	
+	# Add the gravity.
+	if not is_on_floor():
+		velocity += get_gravity() * delta
 	
 	# Apply the movement
 	if direction:
@@ -40,3 +46,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 
 	move_and_slide()
+
+func die():
+	animated_sprite.play("die")
+	is_alive = false
